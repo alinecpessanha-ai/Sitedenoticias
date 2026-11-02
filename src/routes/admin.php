@@ -139,6 +139,7 @@ route('GET', '/admin', function () {
         'pending'   => (int) q_val("SELECT COUNT(*) FROM posts WHERE status = 'pending'{$mine}"),
         'draft'     => (int) q_val("SELECT COUNT(*) FROM posts WHERE status = 'draft'{$mine}"),
         'views'     => (int) q_val("SELECT COALESCE(SUM(views), 0) FROM posts WHERE 1 = 1{$mine}"),
+        'messages'  => can('manage_messages') ? unread_messages_count() : null,
     ];
 
     view('admin/dashboard', [
@@ -613,10 +614,153 @@ route('POST', '/admin/configuracoes', function () {
     save_setting('site_description', mb_substr(input('site_description'), 0, 300));
     save_setting('posts_per_page', (string) max(1, min(50, (int) input('posts_per_page', '10'))));
     save_setting('footer_text', mb_substr(input('footer_text'), 0, 500));
+    $contactEmail = input('contact_email');
+    save_setting('contact_email', filter_var($contactEmail, FILTER_VALIDATE_EMAIL) ? $contactEmail : '');
     foreach (['social_instagram', 'social_x', 'social_facebook', 'social_youtube'] as $key) {
         $value = input($key);
         save_setting($key, $value !== '' && safe_url($value) !== null && preg_match('#^https?://#i', $value) ? $value : '');
     }
     flash('success', 'Configurações salvas.');
     redirect('/admin/configuracoes');
+});
+
+/* ======================================================================
+ * Páginas fixas
+ * ==================================================================== */
+
+route('GET', '/admin/paginas', function () {
+    require_can('manage_pages');
+    view('admin/pages', [
+        'title' => 'Páginas',
+        'pages' => q_all('SELECT p.*, u.name AS author_name FROM pages p
+                          LEFT JOIN users u ON u.id = p.author_id ORDER BY p.position, p.title'),
+    ], ADMIN_LAYOUT);
+});
+
+route('GET', '/admin/paginas/nova', function () {
+    require_can('manage_pages');
+    view('admin/page_form', [
+        'title'  => 'Nova página',
+        'page'   => ['id' => 0, 'title' => '', 'slug' => '', 'content' => '', 'template' => 'default',
+            'status' => 'draft', 'show_in_menu' => 1, 'position' => 0],
+        'errors' => [],
+    ], ADMIN_LAYOUT);
+});
+
+route('GET', '/admin/paginas/{id}/editar', function (string $id) {
+    require_can('manage_pages');
+    $page = q_one('SELECT * FROM pages WHERE id = ?', [(int) $id]);
+    if (!$page) {
+        not_found();
+    }
+    view('admin/page_form', ['title' => 'Editar página', 'page' => $page, 'errors' => []], ADMIN_LAYOUT);
+});
+
+route('POST', '/admin/paginas/salvar', function () {
+    $user = require_can('manage_pages');
+    verify_csrf();
+
+    $id = (int) input('id');
+    $existing = $id ? q_one('SELECT * FROM pages WHERE id = ?', [$id]) : null;
+    if ($id && !$existing) {
+        not_found();
+    }
+
+    $data = [
+        'title'        => mb_substr(input('title'), 0, 200),
+        'content'      => sanitize_html((string) ($_POST['content'] ?? '')),
+        'template'     => isset(PAGE_TEMPLATES[input('template')]) ? input('template') : 'default',
+        'status'       => isset(PAGE_STATUSES[input('status')]) ? input('status') : 'draft',
+        'show_in_menu' => isset($_POST['show_in_menu']) ? 1 : 0,
+        'position'     => (int) input('position', '0'),
+    ];
+
+    if ($data['title'] === '') {
+        view('admin/page_form', [
+            'title'  => $id ? 'Editar página' : 'Nova página',
+            'page'   => array_merge($existing ?? [], $data, ['id' => $id, 'slug' => input('slug')]),
+            'errors' => ['O título é obrigatório.'],
+        ], ADMIN_LAYOUT);
+        return;
+    }
+
+    $data['slug'] = page_slug(input('slug') !== '' ? input('slug') : $data['title'], $id);
+    $columns = array_keys($data);
+    $values = array_values($data);
+
+    if ($existing) {
+        $set = implode(', ', array_map(fn ($c) => "{$c} = ?", $columns));
+        q("UPDATE pages SET {$set}, updated_at = ? WHERE id = ?", [...$values, now(), $id]);
+    } else {
+        $cols = implode(', ', $columns);
+        $marks = implode(', ', array_fill(0, count($columns), '?'));
+        q("INSERT INTO pages ({$cols}, author_id, created_at, updated_at) VALUES ({$marks}, ?, ?, ?)",
+            [...$values, $user['id'], now(), now()]);
+        $id = last_id();
+    }
+
+    flash('success', $data['status'] === 'published' ? 'Página publicada!' : 'Rascunho salvo.');
+    redirect('/admin/paginas/' . $id . '/editar');
+});
+
+route('POST', '/admin/paginas/{id}/excluir', function (string $id) {
+    require_can('manage_pages');
+    verify_csrf();
+    $page = q_one('SELECT * FROM pages WHERE id = ?', [(int) $id]);
+    if (!$page) {
+        not_found();
+    }
+    q('DELETE FROM pages WHERE id = ?', [$page['id']]);
+    flash('success', 'Página “' . $page['title'] . '” excluída.');
+    redirect('/admin/paginas');
+});
+
+/* ======================================================================
+ * Mensagens do formulário de contato
+ * ==================================================================== */
+
+route('GET', '/admin/mensagens', function () {
+    require_can('manage_messages');
+    $filter = input('filtro');
+    $where = $filter === 'nao-lidas' ? 'WHERE m.is_read = 0' : '';
+    $total = (int) q_val("SELECT COUNT(*) FROM messages m {$where}");
+    $pg = paginate($total, 30, current_page());
+    $messages = q_all("SELECT m.*, p.title AS page_title FROM messages m LEFT JOIN pages p ON p.id = m.page_id
+        {$where} ORDER BY m.id DESC LIMIT {$pg['per_page']} OFFSET {$pg['offset']}");
+
+    view('admin/messages', [
+        'title'      => 'Mensagens',
+        'messages'   => $messages,
+        'pagination' => $pg,
+        'filter'     => $filter,
+    ], ADMIN_LAYOUT);
+});
+
+route('GET', '/admin/mensagens/{id}', function (string $id) {
+    require_can('manage_messages');
+    $message = q_one('SELECT m.*, p.title AS page_title FROM messages m LEFT JOIN pages p ON p.id = m.page_id
+        WHERE m.id = ?', [(int) $id]);
+    if (!$message) {
+        not_found();
+    }
+    if (!$message['is_read']) {
+        q('UPDATE messages SET is_read = 1 WHERE id = ?', [$message['id']]);
+    }
+    view('admin/message', ['title' => 'Mensagem', 'message' => $message], ADMIN_LAYOUT);
+});
+
+route('POST', '/admin/mensagens/{id}/nao-lida', function (string $id) {
+    require_can('manage_messages');
+    verify_csrf();
+    q('UPDATE messages SET is_read = 0 WHERE id = ?', [(int) $id]);
+    flash('success', 'Mensagem marcada como não lida.');
+    redirect('/admin/mensagens');
+});
+
+route('POST', '/admin/mensagens/{id}/excluir', function (string $id) {
+    require_can('manage_messages');
+    verify_csrf();
+    q('DELETE FROM messages WHERE id = ?', [(int) $id]);
+    flash('success', 'Mensagem excluída.');
+    redirect('/admin/mensagens');
 });

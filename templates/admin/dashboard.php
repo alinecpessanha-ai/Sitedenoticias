@@ -6,6 +6,9 @@
     <a class="stat" href="<?= url('admin/noticias?status=pending') ?>"><strong><?= $stats['pending'] ?></strong><span>Aguardando revisão</span></a>
     <a class="stat" href="<?= url('admin/noticias?status=draft') ?>"><strong><?= $stats['draft'] ?></strong><span>Rascunhos</span></a>
     <div class="stat"><strong><?= number_format($stats['views'], 0, ',', '.') ?></strong><span>Visualizações</span></div>
+    <?php if ($stats['messages'] !== null): ?>
+        <a class="stat" href="<?= url('admin/mensagens?filtro=nao-lidas') ?>"><strong><?= $stats['messages'] ?></strong><span>Mensagens não lidas</span></a>
+    <?php endif ?>
 </div>
 
 <div class="columns">

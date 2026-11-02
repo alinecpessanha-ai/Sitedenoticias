@@ -183,7 +183,11 @@ route('GET', '/feed.xml', function () {
 route('GET', '/sitemap.xml', function () {
     [$posts] = find_posts(['limit' => 5000]);
     header('Content-Type: application/xml; charset=UTF-8');
-    echo render('site/sitemap', ['posts' => $posts, 'categories' => all_categories()]);
+    echo render('site/sitemap', [
+        'posts'      => $posts,
+        'categories' => all_categories(),
+        'pages'      => q_all("SELECT slug, updated_at FROM pages WHERE status = 'published' ORDER BY position"),
+    ]);
 });
 
 route('GET', '/robots.txt', function () {

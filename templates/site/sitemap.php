@@ -4,6 +4,9 @@
     <?php foreach ($categories as $cat): ?>
     <url><loc><?= e(absolute_url('categoria/' . $cat['slug'])) ?></loc><changefreq>hourly</changefreq></url>
     <?php endforeach ?>
+    <?php foreach ($pages as $page): ?>
+    <url><loc><?= e(absolute_url($page['slug'])) ?></loc><lastmod><?= date('c', strtotime($page['updated_at'])) ?></lastmod></url>
+    <?php endforeach ?>
     <?php foreach ($posts as $post): ?>
     <url><loc><?= e(absolute_url('noticia/' . $post['slug'])) ?></loc><lastmod><?= date('c', strtotime($post['updated_at'])) ?></lastmod></url>
     <?php endforeach ?>

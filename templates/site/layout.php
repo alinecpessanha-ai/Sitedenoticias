@@ -68,6 +68,13 @@ $socials = array_filter([
             <a class="logo logo-small" href="<?= url('/') ?>"><?= e($siteName) ?></a>
             <p><?= e(setting('footer_text', '© ' . date('Y') . ' ' . $siteName . '. Todos os direitos reservados.')) ?></p>
         </div>
+        <?php if ($pages = menu_pages()): ?>
+            <nav class="footer-pages" aria-label="Institucional">
+                <?php foreach ($pages as $item): ?>
+                    <a href="<?= static_page_url($item) ?>"><?= e($item['title']) ?></a>
+                <?php endforeach ?>
+            </nav>
+        <?php endif ?>
         <div class="footer-links">
             <?php foreach ($socials as $label => $link): ?>
                 <a href="<?= e($link) ?>" target="_blank" rel="noopener"><?= e($label) ?></a>

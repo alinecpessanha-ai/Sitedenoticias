@@ -18,6 +18,13 @@
         </label>
     </fieldset>
     <fieldset>
+        <legend>Contato</legend>
+        <label>E-mail para aviso de novas mensagens
+            <input type="email" name="contact_email" value="<?= e(setting('contact_email')) ?>" placeholder="redacao@meuportal.com.br">
+        </label>
+        <p class="muted small">Opcional. As mensagens do formulário sempre ficam salvas em “Mensagens”; o aviso por e-mail depende de o servidor conseguir enviar e-mails.</p>
+    </fieldset>
+    <fieldset>
         <legend>Redes sociais</legend>
         <label>Instagram <input type="url" name="social_instagram" value="<?= e(setting('social_instagram')) ?>" placeholder="https://instagram.com/..."></label>
         <label>X (Twitter) <input type="url" name="social_x" value="<?= e(setting('social_x')) ?>" placeholder="https://x.com/..."></label>

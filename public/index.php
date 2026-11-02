@@ -15,5 +15,6 @@ if (PHP_SAPI === 'cli-server') {
 require dirname(__DIR__) . '/src/bootstrap.php';
 require ROOT . '/src/routes/site.php';
 require ROOT . '/src/routes/admin.php';
+require ROOT . '/src/routes/pages.php'; // por último: captura /{slug}
 
 dispatch();

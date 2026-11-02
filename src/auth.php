@@ -4,7 +4,7 @@
  *
  * Papéis:
  *  - admin:  tudo (usuários, configurações, conteúdo)
- *  - editor: publica e edita qualquer notícia, gerencia categorias e mídia
+ *  - editor: publica e edita qualquer notícia, gerencia categorias, mídia, páginas e mensagens
  *  - author: escreve as próprias notícias e as envia para revisão
  */
 
@@ -69,7 +69,8 @@ function can(string $ability, ?array $post = null): bool
 
     return match ($ability) {
         'manage_users', 'manage_settings' => $role === 'admin',
-        'manage_categories', 'publish', 'edit_others_posts', 'manage_all_media' => $isEditor,
+        'manage_categories', 'publish', 'edit_others_posts', 'manage_all_media',
+        'manage_pages', 'manage_messages' => $isEditor,
         // Autores só mexem nas próprias notícias, e apenas enquanto não forem publicadas
         'edit_post', 'delete_post' => $isEditor || ($post !== null
             && (int) $post['author_id'] === (int) $user['id']

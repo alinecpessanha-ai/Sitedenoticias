@@ -3,8 +3,6 @@
  * Conexão com o banco e funções utilitárias de consulta.
  */
 
-const SCHEMA_VERSION = 1;
-
 function db(): PDO
 {
     static $pdo = null;
@@ -30,16 +28,31 @@ function db(): PDO
     return $pdo;
 }
 
-/** Cria/atualiza as tabelas conforme a versão do esquema. */
+/**
+ * Aplica as migrações pendentes de src/migrations (001_..., 002_..., em ordem).
+ * A versão atual do banco fica guardada em PRAGMA user_version.
+ * Para mudar o banco no futuro, crie um novo arquivo com o próximo número.
+ */
 function migrate(PDO $pdo): void
 {
     $version = (int) $pdo->query('PRAGMA user_version')->fetchColumn();
-    if ($version < 1) {
-        $pdo->exec(file_get_contents(ROOT . '/src/schema.sql'));
-    }
-    // Futuras migrações: if ($version < 2) { ... }
-    if ($version < SCHEMA_VERSION) {
-        $pdo->exec('PRAGMA user_version = ' . SCHEMA_VERSION);
+    $files = glob(ROOT . '/src/migrations/*.sql');
+    sort($files);
+
+    foreach ($files as $file) {
+        $number = (int) basename($file);
+        if ($number <= $version) {
+            continue;
+        }
+        $pdo->beginTransaction();
+        try {
+            $pdo->exec(file_get_contents($file));
+            $pdo->exec('PRAGMA user_version = ' . $number);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 }
 

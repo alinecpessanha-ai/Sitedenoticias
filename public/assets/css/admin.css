@@ -153,6 +153,18 @@ legend { font-weight: 700; font-size: 1rem; margin-bottom: 12px; }
 .media-pick:hover { border-color: var(--primary); }
 .media-pick img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
 
+/* ----- Mensagens ----- */
+.count { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; text-align: center; line-height: 20px; }
+.messages-table tr.unread td { background: #f8fafc; }
+.messages-table tr.unread a { font-weight: 700; }
+.message-meta { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.message-meta dt { color: var(--muted); }
+.message-meta dd { margin: 0; }
+.message-body { white-space: normal; line-height: 1.7; margin-bottom: 20px; overflow-wrap: anywhere; }
+.message-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.message-actions form { margin: 0; }
+.btn.danger { color: var(--danger); }
+
 /* ----- Login / instalação ----- */
 .auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
 .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 32px; width: 100%; max-width: 420px; }

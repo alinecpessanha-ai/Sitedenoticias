@@ -112,3 +112,54 @@ function most_read(int $limit = 5): array
 {
     return find_posts(['order' => 'views', 'limit' => $limit])[0];
 }
+
+/* ======================================================================
+ * Páginas fixas e mensagens de contato
+ * ==================================================================== */
+
+const PAGE_TEMPLATES = [
+    'default' => 'Padrão',
+    'contact' => 'Contato (com formulário)',
+];
+
+const PAGE_STATUSES = [
+    'draft'     => 'Rascunho',
+    'published' => 'Publicada',
+];
+
+/**
+ * Endereços que já são usados pelo sistema e não podem virar página
+ * (as páginas ficam na raiz do site, ex.: /quem-somos).
+ */
+const RESERVED_SLUGS = [
+    'admin', 'noticia', 'noticias', 'categoria', 'tag', 'autor', 'busca',
+    'feed.xml', 'sitemap.xml', 'robots.txt', 'uploads', 'assets', 'index.php',
+];
+
+/** Gera um slug de página válido: único e fora da lista de reservados. */
+function page_slug(string $source, int $ignoreId = 0): string
+{
+    $slug = slugify($source);
+    if (in_array($slug, RESERVED_SLUGS, true)) {
+        $slug .= '-pagina';
+    }
+    return unique_slug('pages', $slug, $ignoreId);
+}
+
+function static_page_url(array $page): string
+{
+    return url($page['slug']);
+}
+
+/** Páginas publicadas marcadas para aparecer no menu do rodapé. */
+function menu_pages(): array
+{
+    static $cache = null;
+    return $cache ??= q_all("SELECT id, title, slug FROM pages
+        WHERE status = 'published' AND show_in_menu = 1 ORDER BY position, title");
+}
+
+function unread_messages_count(): int
+{
+    return (int) q_val('SELECT COUNT(*) FROM messages WHERE is_read = 0');
+}

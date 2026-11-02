@@ -6,6 +6,8 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 ## Funcionalidades
 
 **Site público**
+- Páginas fixas na raiz do site (`/quem-somos`, `/contato`...) com links no rodapé
+- Formulário de contato com proteção anti-spam (campo armadilha + limite de envios por IP)
 - Página inicial com manchete, destaques, últimas notícias e blocos por editoria
 - Página da notícia com linha fina, autor, tempo de leitura, imagem com legenda, tags, compartilhamento e "Leia também"
 - Páginas de categoria, tag e autor, busca, paginação e "Mais lidas"
@@ -17,6 +19,8 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 - Editor visual (negrito, intertítulos, citações, listas, links, imagens e vídeos do YouTube/Vimeo, modo HTML)
 - Rascunho → revisão → publicação, com **agendamento** por data futura e marcação de destaque
 - Categorias (com ordem no menu), tags, biblioteca de mídia
+- Páginas fixas com modelo "Padrão" ou "Contato" (com formulário)
+- Caixa de **Mensagens** do formulário de contato, com contador de não lidas e aviso opcional por e-mail
 - Usuários com papéis: **Administrador**, **Editor** e **Autor**
 - Configurações do site (nome, slogan, rodapé, redes sociais, itens por página)
 - Painel com estatísticas, notícias para revisar e mais lidas
@@ -54,7 +58,7 @@ public/                 Raiz pública (index.php, CSS, JS, uploads)
 src/
   bootstrap.php         Inicialização
   database.php          Conexão SQLite, migrações e configurações do site
-  schema.sql            Tabelas
+  migrations/           Alterações do banco, numeradas (001_..., 002_...)
   auth.php              Login, papéis e permissões
   sanitizer.php         Limpeza do HTML das notícias
   uploads.php           Upload de imagens
@@ -62,16 +66,22 @@ src/
   router.php            Roteador
   routes/site.php       Rotas do site público
   routes/admin.php      Rotas do painel
+  routes/pages.php      Páginas fixas e formulário de contato (carregado por último)
 templates/
   site/                 Tema do site
   admin/                Telas do painel
 ```
 
+### Banco de dados e atualizações
+
+As mudanças no banco ficam em `src/migrations/`, em arquivos numerados. Ao atualizar o código de um site
+já instalado, as migrações novas são aplicadas sozinhas no próximo acesso — não é preciso reinstalar.
+Para alterar o banco, crie um novo arquivo com o próximo número (ex.: `003_minha_mudanca.sql`).
+
 Para mudar o visual do site, edite `templates/site/` e `public/assets/css/site.css`.
 
 ## Próximos passos sugeridos
 
-- Páginas estáticas (Quem somos, Contato, Expediente)
 - Redimensionamento automático de imagens (miniaturas)
 - Revisões/histórico de alterações das notícias
 - Comentários moderados e newsletter
