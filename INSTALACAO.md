@@ -44,12 +44,13 @@ As pastas internas (`src`, `storage`, `templates`...) ficam protegidas: o navega
 
 1. No cPanel, abra **"SSL/TLS Status"** e rode o **AutoSSL** para o seu domínio (é gratuito).
    Em contas novas ele costuma já estar ativo; o certificado pode levar alguns minutos para sair.
-2. Com o cadeado funcionando, abra o arquivo **`.htaccess`** da `public_html` (botão **Editar**)
-   e tire o `#` do começo destas duas linhas, para sempre usar HTTPS:
+2. O `.htaccess` do pacote já força o uso de HTTPS. Se o certificado ainda não estiver ativo e o site
+   não abrir, edite o **`.htaccess`** da pasta do site (botão **Editar**) e coloque `#` no começo destas
+   duas linhas até o cadeado funcionar:
 
    ```
-   # RewriteCond %{HTTPS} off
-   # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+   RewriteCond %{HTTPS} off
+   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
    ```
 
 ## 4. Instale
