@@ -9,7 +9,8 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 - Páginas fixas na raiz do site (`/quem-somos`, `/contato`...) com links no rodapé
 - Formulário de contato com proteção anti-spam (campo armadilha + limite de envios por IP)
 - Comentários com respostas, exibidos só depois de aprovados
-- Página inicial com manchete, destaques, últimas notícias e blocos por editoria
+- Página inicial com faixa "Últimas", manchete, destaques, últimas notícias e blocos por editoria
+- Menu lateral no celular, horários relativos ("há 15 min"), barra de progresso de leitura, "copiar link", compartilhamento nativo e botão "voltar ao topo"
 - Página da notícia com linha fina, autor, tempo de leitura, imagem com legenda, tags, compartilhamento e "Leia também"
 - Páginas de categoria, tag e autor, busca, paginação e "Mais lidas"
 - RSS (`/feed.xml`), sitemap (`/sitemap.xml`), `robots.txt` e meta tags Open Graph
@@ -47,6 +48,13 @@ php -S localhost:8000 -t public public/index.php
 
 Abra http://localhost:8000/admin e siga a instalação. O banco é criado sozinho em `storage/database.sqlite`.
 
+Para ver o site cheio de conteúdo (editorias, 24 notícias fictícias com imagens e comentários):
+
+```bash
+php bin/demo.php            # cria o conteúdo de demonstração
+php bin/demo.php --remover  # apaga só o que foi criado pela demonstração
+```
+
 ### Em produção (Apache/hospedagem compartilhada)
 
 1. Envie os arquivos e aponte a raiz do domínio (document root) para a pasta `public/`.
@@ -61,6 +69,7 @@ No Nginx, use `try_files $uri /index.php?$query_string;`.
 ```
 config.php              Configurações
 bin/miniaturas.php      Gera miniaturas de imagens antigas (terminal)
+bin/demo.php            Cria/remove conteúdo de demonstração (terminal)
 public/                 Raiz pública (index.php, CSS, JS, uploads)
 src/
   bootstrap.php         Inicialização

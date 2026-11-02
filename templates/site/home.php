@@ -1,9 +1,23 @@
 <?php if (!$hero): ?>
     <div class="empty-state">
-        <h1>Nenhuma notícia publicada ainda</h1>
+        <h2>Nenhuma notícia publicada ainda</h2>
         <p>Acesse o <a href="<?= url('admin') ?>">painel administrativo</a> para publicar a primeira notícia.</p>
     </div>
 <?php return; endif ?>
+
+<?php if ($ticker): ?>
+    <section class="ticker" aria-label="Últimas notícias">
+        <span class="ticker-label">Últimas</span>
+        <ul class="ticker-list">
+            <?php foreach ($ticker as $item): ?>
+                <li>
+                    <time datetime="<?= e(date('c', strtotime($item['published_at']))) ?>"><?= e(time_ago($item['published_at'])) ?></time>
+                    <a href="<?= post_url($item) ?>"><?= e($item['title']) ?></a>
+                </li>
+            <?php endforeach ?>
+        </ul>
+    </section>
+<?php endif ?>
 
 <section class="hero">
     <div class="hero-main">

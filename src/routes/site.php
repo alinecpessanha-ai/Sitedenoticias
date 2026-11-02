@@ -32,7 +32,10 @@ route('GET', '/', function () {
         }
     }
 
+    [$ticker] = find_posts(['limit' => 6]);
+
     view('site/home', [
+        'ticker'   => $ticker,
         'hero'     => $hero,
         'latest'   => $latest,
         'sections' => $sections,
@@ -48,6 +51,7 @@ route('GET', '/noticias', function () {
     view('site/list', [
         'title'      => 'Todas as notícias',
         'heading'    => 'Todas as notícias',
+        'leadFirst'  => $pg['page'] === 1,
         'posts'      => $posts,
         'pagination' => $pg,
     ], SITE_LAYOUT);
@@ -176,6 +180,7 @@ route('GET', '/categoria/{slug}', function (string $slug) {
         'description'    => $category['description'],
         'heading'        => $category['name'],
         'subheading'     => $category['description'],
+        'leadFirst'      => $pg['page'] === 1,
         'posts'          => $posts,
         'pagination'     => $pg,
         'activeCategory' => $category['id'],

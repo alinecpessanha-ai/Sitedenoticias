@@ -45,7 +45,14 @@ $socials = array_filter([
         </div>
     </div>
     <div class="container brand">
-        <a class="logo" href="<?= url('/') ?>"><?= e($siteName) ?></a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-gaveta" data-menu-open>
+            <span class="burger" aria-hidden="true"></span><span>Menu</span>
+        </button>
+        <?php if (request_path() === '/'): /* na home, o nome do site é o título principal da página */ ?>
+            <h1 class="logo-title"><a class="logo" href="<?= url('/') ?>"><?= e($siteName) ?></a></h1>
+        <?php else: ?>
+            <a class="logo" href="<?= url('/') ?>"><?= e($siteName) ?></a>
+        <?php endif ?>
         <?php if ($siteDescription): ?><p class="tagline"><?= e($siteDescription) ?></p><?php endif ?>
     </div>
     <nav class="main-nav" aria-label="Seções">
@@ -57,6 +64,33 @@ $socials = array_filter([
         </div>
     </nav>
 </header>
+
+<!-- Menu lateral (celular) -->
+<div class="drawer" id="menu-gaveta" hidden data-menu>
+    <div class="drawer-backdrop" data-menu-close></div>
+    <nav class="drawer-panel" aria-label="Menu">
+        <div class="drawer-head">
+            <strong><?= e($siteName) ?></strong>
+            <button type="button" class="drawer-close" data-menu-close aria-label="Fechar menu">✕</button>
+        </div>
+        <form class="search-form drawer-search" action="<?= url('busca') ?>" method="get" role="search">
+            <input type="search" name="q" placeholder="Buscar notícias…" aria-label="Buscar notícias">
+            <button type="submit">Buscar</button>
+        </form>
+        <p class="drawer-label">Editorias</p>
+        <a href="<?= url('/') ?>">Início</a>
+        <a href="<?= url('noticias') ?>">Todas as notícias</a>
+        <?php foreach (all_categories() as $cat): ?>
+            <a href="<?= url('categoria/' . $cat['slug']) ?>"><?= e($cat['name']) ?></a>
+        <?php endforeach ?>
+        <?php if ($menuPages = menu_pages()): ?>
+            <p class="drawer-label">Institucional</p>
+            <?php foreach ($menuPages as $item): ?>
+                <a href="<?= static_page_url($item) ?>"><?= e($item['title']) ?></a>
+            <?php endforeach ?>
+        <?php endif ?>
+    </nav>
+</div>
 
 <main class="container site-main">
     <?= $content ?>
@@ -84,5 +118,8 @@ $socials = array_filter([
         </div>
     </div>
 </footer>
+
+<button type="button" class="to-top" data-to-top hidden aria-label="Voltar ao topo">↑</button>
+<script src="<?= asset('js/site.js') ?>" defer></script>
 </body>
 </html>

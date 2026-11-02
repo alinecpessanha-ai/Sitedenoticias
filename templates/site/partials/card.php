@@ -24,6 +24,8 @@ $loading = $variant === 'hero' ? 'fetchpriority="high"' : 'loading="lazy"';
         <?php if ($showExcerpt && $post['excerpt']): ?>
             <p class="card-excerpt"><?= e($post['excerpt']) ?></p>
         <?php endif ?>
-        <time class="card-date" datetime="<?= e(date('c', strtotime($post['published_at']))) ?>"><?= e(format_date($post['published_at'], true)) ?></time>
+        <time class="card-date" datetime="<?= e(date('c', strtotime($post['published_at']))) ?>" title="<?= e(format_date($post['published_at'], true)) ?>">
+            <?= e(time() - strtotime($post['published_at']) < 86400 ? ucfirst(time_ago($post['published_at'])) : format_date($post['published_at'], true)) ?>
+        </time>
     </div>
 </article>

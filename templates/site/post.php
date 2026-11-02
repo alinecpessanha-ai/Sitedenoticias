@@ -3,6 +3,7 @@ $shareUrl = rawurlencode(absolute_url('noticia/' . $post['slug']));
 $shareText = rawurlencode($post['title']);
 $updated = $post['published_at'] && strtotime($post['updated_at']) - strtotime($post['published_at']) > 3600;
 ?>
+<div class="read-progress" data-read-progress aria-hidden="true"></div>
 <div class="layout">
     <article class="main-col single">
         <?php if ($preview): ?>
@@ -56,6 +57,8 @@ $updated = $post['published_at'] && strtotime($post['updated_at']) - strtotime($
             <a href="https://twitter.com/intent/tweet?text=<?= $shareText ?>&amp;url=<?= $shareUrl ?>" target="_blank" rel="noopener">X</a>
             <a href="https://www.facebook.com/sharer/sharer.php?u=<?= $shareUrl ?>" target="_blank" rel="noopener">Facebook</a>
             <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?= $shareUrl ?>" target="_blank" rel="noopener">LinkedIn</a>
+            <button type="button" data-copy-link="<?= e(absolute_url('noticia/' . $post['slug'])) ?>">Copiar link</button>
+            <button type="button" data-native-share data-title="<?= e($post['title']) ?>" data-url="<?= e(absolute_url('noticia/' . $post['slug'])) ?>" hidden>Compartilhar…</button>
         </div>
 
         <?= render('site/partials/comments', compact('post', 'comments', 'commentCount', 'closedReason', 'myPending', 'commentErrors', 'commentOld')) ?>

@@ -188,6 +188,28 @@ function weekday(?string $datetime = null): string
     return $days[(int) date('w', $datetime ? strtotime($datetime) : time())];
 }
 
+/** Tempo relativo para notícias recentes: "há 5 min", "há 3 h", "ontem"; depois disso, a data. */
+function time_ago(?string $datetime): string
+{
+    if (!$datetime) {
+        return '';
+    }
+    $diff = time() - strtotime($datetime);
+    if ($diff < 60) {
+        return 'agora';
+    }
+    if ($diff < 3600) {
+        return 'há ' . floor($diff / 60) . ' min';
+    }
+    if ($diff < 86400) {
+        return 'há ' . floor($diff / 3600) . ' h';
+    }
+    if ($diff < 172800) {
+        return 'ontem';
+    }
+    return date('d/m', strtotime($datetime));
+}
+
 function short_date(?string $datetime): string
 {
     return $datetime ? date('d/m/Y H:i', strtotime($datetime)) : '—';

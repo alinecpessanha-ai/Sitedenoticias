@@ -6,6 +6,9 @@
         </header>
 
         <?php if ($posts): ?>
+            <?php if (!empty($leadFirst)): $lead = array_shift($posts); ?>
+                <div class="list-lead"><?= render('site/partials/card', ['post' => $lead, 'variant' => 'hero']) ?></div>
+            <?php endif ?>
             <div class="post-list">
                 <?php foreach ($posts as $post): ?>
                     <?= render('site/partials/card', ['post' => $post, 'variant' => 'horizontal']) ?>
