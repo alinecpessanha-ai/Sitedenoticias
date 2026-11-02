@@ -8,6 +8,7 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 **Site público**
 - Páginas fixas na raiz do site (`/quem-somos`, `/contato`...) com links no rodapé
 - Formulário de contato com proteção anti-spam (campo armadilha + limite de envios por IP)
+- Comentários com respostas, exibidos só depois de aprovados
 - Página inicial com manchete, destaques, últimas notícias e blocos por editoria
 - Página da notícia com linha fina, autor, tempo de leitura, imagem com legenda, tags, compartilhamento e "Leia também"
 - Páginas de categoria, tag e autor, busca, paginação e "Mais lidas"
@@ -23,6 +24,7 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 - Categorias (com ordem no menu), tags, biblioteca de mídia
 - **Miniaturas automáticas** (400, 800 e 1600 px) ao enviar imagens, com correção da rotação de fotos de celular
 - Páginas fixas com modelo "Padrão" ou "Contato" (com formulário)
+- **Moderação de comentários**: fila de pendentes, spam automático (links/palavras bloqueadas), ações em lote e resposta da redação
 - Caixa de **Mensagens** do formulário de contato, com contador de não lidas e aviso opcional por e-mail
 - Usuários com papéis: **Administrador**, **Editor** e **Autor**
 - Configurações do site (nome, slogan, rodapé, redes sociais, itens por página)
@@ -70,6 +72,7 @@ src/
   images.php            Miniaturas e imagens responsivas
   content.php           Consultas de notícias, categorias e tags
   revisions.php         Histórico de alterações e comparação de textos
+  comments.php          Comentários: regras, anti-spam e moderação
   router.php            Roteador
   routes/site.php       Rotas do site público
   routes/admin.php      Rotas do painel
@@ -102,6 +105,6 @@ Para mudar o visual do site, edite `templates/site/` e `public/assets/css/site.c
 
 ## Próximos passos sugeridos
 
-- Comentários moderados e newsletter
+- Newsletter
 - Cache de páginas para alto tráfego
 - Suporte a MySQL/PostgreSQL

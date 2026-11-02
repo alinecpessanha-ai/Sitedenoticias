@@ -54,6 +54,42 @@ route('GET', '/noticias', function () {
 });
 
 /* ---------- Notícia ---------- */
+/** Monta e exibe a página da notícia (usada também ao reexibir o formulário de comentário com erros). */
+function render_post_page(array $post, bool $preview, array $commentErrors = [], array $commentOld = []): void
+{
+    $related = [];
+    if ($post['category_id']) {
+        [$related] = find_posts(['category_id' => $post['category_id'], 'exclude' => [$post['id']], 'limit' => 3]);
+    }
+
+    // Comentários do próprio leitor que ainda aguardam moderação (só ele vê)
+    $myPending = [];
+    $ids = array_map('intval', $_SESSION['my_comments'] ?? []);
+    if ($ids) {
+        $marks = implode(',', array_fill(0, count($ids), '?'));
+        $myPending = q_all("SELECT * FROM comments WHERE post_id = ? AND status != 'approved' AND id IN ({$marks}) ORDER BY id",
+            [$post['id'], ...$ids]);
+    }
+
+    view('site/post', [
+        'title'          => $post['title'],
+        'description'    => $post['excerpt'] ?: excerpt_from($post['content'], 160),
+        'og_image'       => $post['featured_image'] ? absolute_url('uploads/' . $post['featured_image']) : null,
+        'og_type'        => 'article',
+        'post'           => $post,
+        'tags'           => post_tags((int) $post['id']),
+        'related'        => $related,
+        'preview'        => $preview,
+        'canEdit'        => can('edit_post', $post),
+        'comments'       => approved_comments((int) $post['id']),
+        'commentCount'   => approved_comment_count((int) $post['id']),
+        'closedReason'   => comments_closed_reason($post),
+        'myPending'      => $myPending,
+        'commentErrors'  => $commentErrors,
+        'commentOld'     => $commentOld + ($_SESSION['commenter'] ?? []),
+    ], SITE_LAYOUT);
+}
+
 route('GET', '/noticia/{slug}', function (string $slug) {
     $post = find_post_by_slug($slug);
     if (!$post) {
@@ -71,22 +107,58 @@ route('GET', '/noticia/{slug}', function (string $slug) {
         q('UPDATE posts SET views = views + 1 WHERE id = ?', [$post['id']]);
     }
 
-    $related = [];
-    if ($post['category_id']) {
-        [$related] = find_posts(['category_id' => $post['category_id'], 'exclude' => [$post['id']], 'limit' => 3]);
+    render_post_page($post, $preview);
+});
+
+/* ---------- Envio de comentário ---------- */
+route('POST', '/noticia/{slug}/comentar', function (string $slug) {
+    $post = find_post_by_slug($slug);
+    if (!$post || !is_public($post)) {
+        not_found();
+    }
+    verify_csrf();
+
+    $anchor = post_url($post) . '#comentarios';
+    if (comments_closed_reason($post) !== null) {
+        flash('error', 'Os comentários estão fechados nesta notícia.');
+        header('Location: ' . $anchor);
+        exit;
     }
 
-    view('site/post', [
-        'title'       => $post['title'],
-        'description' => $post['excerpt'] ?: excerpt_from($post['content'], 160),
-        'og_image'    => $post['featured_image'] ? absolute_url('uploads/' . $post['featured_image']) : null,
-        'og_type'     => 'article',
-        'post'        => $post,
-        'tags'        => post_tags((int) $post['id']),
-        'related'     => $related,
-        'preview'     => $preview,
-        'canEdit'     => can('edit_post', $post),
-    ], SITE_LAYOUT);
+    $input = [
+        'name'      => input('name'),
+        'email'     => input('email'),
+        'body'      => (string) ($_POST['body'] ?? ''),
+        'parent_id' => input('parent_id'),
+    ];
+
+    // Campo armadilha: pessoas não veem, robôs preenchem
+    if (input('website') !== '') {
+        flash('success', 'Comentário enviado! Ele aparecerá aqui depois de aprovado pela moderação.');
+        header('Location: ' . $anchor);
+        exit;
+    }
+
+    $result = submit_comment($post, $input, client_ip());
+    if (!$result['ok']) {
+        http_response_code(422);
+        render_post_page($post, false, $result['errors'], $input);
+        return;
+    }
+
+    // Lembra nome e e-mail para o próximo comentário, e o comentário pendente para mostrar só a este leitor
+    $_SESSION['commenter'] = ['name' => mb_substr($input['name'], 0, 80), 'email' => mb_substr($input['email'], 0, 150)];
+    $_SESSION['my_comments'] = array_slice([...($_SESSION['my_comments'] ?? []), $result['id']], -20);
+
+    if ($result['status'] === 'approved') {
+        flash('success', 'Comentário publicado. Obrigado por participar!');
+        header('Location: ' . post_url($post) . '#comentario-' . $result['id']);
+    } else {
+        // Spam também recebe esta mensagem, para não dar pistas a quem envia
+        flash('success', 'Comentário enviado! Ele aparecerá aqui depois de aprovado pela moderação.');
+        header('Location: ' . $anchor);
+    }
+    exit;
 });
 
 /* ---------- Categoria ---------- */

@@ -140,6 +140,7 @@ route('GET', '/admin', function () {
         'draft'     => (int) q_val("SELECT COUNT(*) FROM posts WHERE status = 'draft'{$mine}"),
         'views'     => (int) q_val("SELECT COALESCE(SUM(views), 0) FROM posts WHERE 1 = 1{$mine}"),
         'messages'  => can('manage_messages') ? unread_messages_count() : null,
+        'comments'  => can('manage_comments') ? pending_comments_count() : null,
     ];
 
     view('admin/dashboard', [
@@ -206,7 +207,8 @@ route('GET', '/admin/noticias/nova', function () {
     view('admin/post_form', [
         'title'  => 'Nova notícia',
         'post'   => ['id' => 0, 'title' => '', 'slug' => '', 'excerpt' => '', 'content' => '', 'featured_image' => null,
-            'image_caption' => '', 'category_id' => null, 'status' => 'draft', 'is_featured' => 0, 'published_at' => null],
+            'image_caption' => '', 'category_id' => null, 'status' => 'draft', 'is_featured' => 0, 'published_at' => null,
+            'comments_enabled' => 1],
         'tags'   => '',
         'errors' => [],
     ], ADMIN_LAYOUT);
@@ -264,6 +266,7 @@ route('POST', '/admin/noticias/salvar', function () {
         $data['status'] = 'draft';
     }
 
+    $data['comments_enabled'] = isset($_POST['comments_enabled']) ? 1 : 0;
     $data['is_featured'] = can('publish') ? (isset($_POST['is_featured']) ? 1 : 0) : (int) ($existing['is_featured'] ?? 0);
 
     // Data de publicação: se vazia e publicando agora, usa o momento atual
@@ -314,7 +317,7 @@ route('POST', '/admin/noticias/salvar', function () {
         return;
     }
 
-    $columns = ['title', 'slug', 'excerpt', 'content', 'featured_image', 'image_caption', 'category_id', 'status', 'is_featured', 'published_at'];
+    $columns = ['title', 'slug', 'excerpt', 'content', 'featured_image', 'image_caption', 'category_id', 'status', 'is_featured', 'published_at', 'comments_enabled'];
     $values = array_map(fn ($c) => $data[$c], $columns);
 
     if ($existing) {
@@ -628,6 +631,10 @@ route('POST', '/admin/configuracoes', function () {
     save_setting('footer_text', mb_substr(input('footer_text'), 0, 500));
     $contactEmail = input('contact_email');
     save_setting('contact_email', filter_var($contactEmail, FILTER_VALIDATE_EMAIL) ? $contactEmail : '');
+    save_setting('comments_enabled', isset($_POST['comments_enabled']) ? '1' : '0');
+    save_setting('comments_moderation', isset(COMMENT_MODERATION[input('comments_moderation')]) ? input('comments_moderation') : 'all');
+    save_setting('comments_close_days', (string) max(0, min(3650, (int) input('comments_close_days', '0'))));
+    save_setting('comments_blocklist', mb_substr((string) ($_POST['comments_blocklist'] ?? ''), 0, 5000));
     foreach (['social_instagram', 'social_x', 'social_facebook', 'social_youtube'] as $key) {
         $value = input($key);
         save_setting($key, $value !== '' && safe_url($value) !== null && preg_match('#^https?://#i', $value) ? $value : '');
@@ -882,4 +889,121 @@ route('POST', '/admin/noticias/{id}/historico/{rev}/restaurar', function (string
     }
     flash('success', 'Versão de ' . $from . ' restaurada.' . ($warnings ? ' Atenção: ' . implode(' e ', $warnings) . '.' : ''));
     redirect('/admin/noticias/' . $post['id'] . '/editar');
+});
+
+/* ======================================================================
+ * Comentários (moderação)
+ * ==================================================================== */
+
+route('GET', '/admin/comentarios', function () {
+    require_can('manage_comments');
+    $status = input('status', 'pending');
+    $where = ['1 = 1'];
+    $params = [];
+    if (isset(COMMENT_STATUSES[$status])) {
+        $where[] = 'c.status = ?';
+        $params[] = $status;
+    } else {
+        $status = 'todos';
+    }
+    $search = input('q');
+    if ($search !== '') {
+        $where[] = '(c.body LIKE ? OR c.author_name LIKE ? OR c.author_email LIKE ?)';
+        array_push($params, "%{$search}%", "%{$search}%", "%{$search}%");
+    }
+    $whereSql = implode(' AND ', $where);
+    $total = (int) q_val("SELECT COUNT(*) FROM comments c WHERE {$whereSql}", $params);
+    $pg = paginate($total, 30, current_page());
+    $comments = q_all("SELECT c.*, p.title AS post_title, p.slug AS post_slug, parent.author_name AS parent_name
+        FROM comments c
+        JOIN posts p ON p.id = c.post_id
+        LEFT JOIN comments parent ON parent.id = c.parent_id
+        WHERE {$whereSql} ORDER BY c.id DESC LIMIT {$pg['per_page']} OFFSET {$pg['offset']}", $params);
+
+    $counts = q('SELECT status, COUNT(*) FROM comments GROUP BY status')->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    view('admin/comments', [
+        'title'      => 'Comentários',
+        'comments'   => $comments,
+        'pagination' => $pg,
+        'status'     => $status,
+        'search'     => $search,
+        'counts'     => $counts,
+    ], ADMIN_LAYOUT);
+});
+
+/** Ações de moderação, em lote (caixas marcadas) ou num comentário só (botão da linha). */
+route('POST', '/admin/comentarios/acao', function () {
+    require_can('manage_comments');
+    verify_csrf();
+
+    if (input('single') !== '' && str_contains(input('single'), ':')) {
+        [$action, $id] = explode(':', input('single'), 2);
+        $ids = [(int) $id];
+    } else {
+        $action = input('action');
+        $ids = array_map('intval', (array) ($_POST['ids'] ?? []));
+    }
+    $ids = array_values(array_filter($ids));
+    $back = '/admin/comentarios?' . http_build_query(['status' => input('return_status', 'pending'), 'q' => input('return_q')]);
+
+    if (!$ids) {
+        flash('error', 'Selecione pelo menos um comentário.');
+        redirect($back);
+    }
+    $marks = implode(',', array_fill(0, count($ids), '?'));
+
+    switch ($action) {
+        case 'approve':
+            q("UPDATE comments SET status = 'approved', approved_at = COALESCE(approved_at, ?) WHERE id IN ({$marks})", [now(), ...$ids]);
+            $message = count($ids) === 1 ? 'Comentário aprovado.' : count($ids) . ' comentários aprovados.';
+            break;
+        case 'pending':
+            q("UPDATE comments SET status = 'pending' WHERE id IN ({$marks})", $ids);
+            $message = 'Comentário(s) devolvido(s) para a fila de moderação.';
+            break;
+        case 'spam':
+            q("UPDATE comments SET status = 'spam' WHERE id IN ({$marks})", $ids);
+            $message = 'Comentário(s) marcado(s) como spam.';
+            break;
+        case 'delete':
+            q("DELETE FROM comments WHERE id IN ({$marks})", $ids);
+            $message = 'Comentário(s) excluído(s) definitivamente.';
+            break;
+        default:
+            flash('error', 'Escolha uma ação.');
+            redirect($back);
+    }
+    flash('success', $message);
+    redirect($back);
+});
+
+/** A redação responde a um comentário (a resposta já entra aprovada). */
+route('POST', '/admin/comentarios/{id}/responder', function (string $id) {
+    $user = require_can('manage_comments');
+    verify_csrf();
+    $comment = q_one('SELECT * FROM comments WHERE id = ?', [(int) $id]);
+    if (!$comment) {
+        not_found();
+    }
+    $body = trim(str_replace("\r\n", "\n", (string) ($_POST['body'] ?? '')));
+    $back = '/admin/comentarios?' . http_build_query(['status' => input('return_status', 'pending')]);
+    if (mb_strlen($body) < COMMENT_MIN_LENGTH || mb_strlen($body) > COMMENT_MAX_LENGTH) {
+        flash('error', 'Escreva uma resposta (até ' . COMMENT_MAX_LENGTH . ' caracteres).');
+        redirect($back);
+    }
+
+    // Respostas ficam em um nível só: respondendo a uma resposta, a nova entra na mesma conversa
+    $parentId = $comment['parent_id'] ?: $comment['id'];
+
+    // Responder a um comentário implica aprová-lo (e à conversa)
+    q("UPDATE comments SET status = 'approved', approved_at = COALESCE(approved_at, ?) WHERE id IN (?, ?)",
+        [now(), $comment['id'], $parentId]);
+    q("INSERT INTO comments (post_id, parent_id, user_id, author_name, author_email, body, status, ip, created_at, approved_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?)", [
+        $comment['post_id'], $parentId, $user['id'], $user['name'], $user['email'], $body, client_ip(), now(), now(),
+    ]);
+
+    flash('success', 'Resposta publicada na notícia.');
+    redirect($back);
 });

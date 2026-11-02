@@ -34,4 +34,5 @@ require ROOT . '/src/images.php';
 require ROOT . '/src/uploads.php';
 require ROOT . '/src/content.php';
 require ROOT . '/src/revisions.php';
+require ROOT . '/src/comments.php';
 require ROOT . '/src/router.php';

@@ -51,6 +51,7 @@ $statusOptions = can('publish') ? POST_STATUSES : array_intersect_key(POST_STATU
             <?php if (can('publish')): ?>
                 <label class="checkbox"><input type="checkbox" name="is_featured" value="1" <?= $post['is_featured'] ? 'checked' : '' ?>> Destaque na página inicial</label>
             <?php endif ?>
+            <label class="checkbox"><input type="checkbox" name="comments_enabled" value="1" <?= ($post['comments_enabled'] ?? 1) ? 'checked' : '' ?>> Permitir comentários</label>
             <button type="submit" class="btn btn-primary btn-block">Salvar</button>
         </section>
 

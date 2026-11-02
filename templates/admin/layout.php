@@ -2,11 +2,13 @@
 $me = current_user();
 $path = request_path();
 $unread = can('manage_messages') ? unread_messages_count() : 0;
+$pendingComments = can('manage_comments') ? pending_comments_count() : 0;
 $menu = [
     ['admin', 'Painel', true, fn ($p) => $p === '/admin'],
     ['admin/noticias', 'Notícias', true, fn ($p) => str_starts_with($p, '/admin/noticias')],
     ['admin/categorias', 'Categorias', can('manage_categories'), fn ($p) => str_starts_with($p, '/admin/categorias')],
     ['admin/midia', 'Mídia', true, fn ($p) => str_starts_with($p, '/admin/midia')],
+    ['admin/comentarios', 'Comentários', can('manage_comments'), fn ($p) => str_starts_with($p, '/admin/comentarios'), $pendingComments],
     ['admin/paginas', 'Páginas', can('manage_pages'), fn ($p) => str_starts_with($p, '/admin/paginas')],
     ['admin/mensagens', 'Mensagens', can('manage_messages'), fn ($p) => str_starts_with($p, '/admin/mensagens'), $unread],
     ['admin/usuarios', 'Usuários', can('manage_users'), fn ($p) => str_starts_with($p, '/admin/usuarios')],
@@ -30,7 +32,7 @@ $menu = [
         <a class="admin-brand" href="<?= url('admin') ?>"><?= e(setting('site_name', 'CMS')) ?></a>
         <nav>
             <?php foreach ($menu as $item): [$href, $label, $visible, $isActive] = $item; if (!$visible) continue; ?>
-                <a href="<?= url($href) ?>" class="<?= $isActive($path) ? 'active' : '' ?>"><?= e($label) ?><?php if (!empty($item[4])): ?> <span class="count" title="Não lidas"><?= (int) $item[4] ?></span><?php endif ?></a>
+                <a href="<?= url($href) ?>" class="<?= $isActive($path) ? 'active' : '' ?>"><?= e($label) ?><?php if (!empty($item[4])): ?> <span class="count" title="Aguardando você"><?= (int) $item[4] ?></span><?php endif ?></a>
             <?php endforeach ?>
         </nav>
         <a class="btn btn-primary btn-block new-post" href="<?= url('admin/noticias/nova') ?>">+ Nova notícia</a>

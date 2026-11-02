@@ -26,6 +26,7 @@ $updated = $post['published_at'] && strtotime($post['updated_at']) - strtotime($
                 <?php endif ?>
                 <?php if ($updated): ?><span>Atualizado em <?= e(format_date($post['updated_at'], true)) ?></span><?php endif ?>
                 <span><?= reading_time($post['content']) ?> min de leitura</span>
+                <?php if ($commentCount): ?><a href="#comentarios"><?= $commentCount ?> <?= $commentCount === 1 ? 'comentário' : 'comentários' ?></a><?php endif ?>
                 <?php if ($canEdit): ?><a class="edit-link" href="<?= url('admin/noticias/' . $post['id'] . '/editar') ?>">Editar</a><?php endif ?>
             </div>
         </header>
@@ -56,6 +57,8 @@ $updated = $post['published_at'] && strtotime($post['updated_at']) - strtotime($
             <a href="https://www.facebook.com/sharer/sharer.php?u=<?= $shareUrl ?>" target="_blank" rel="noopener">Facebook</a>
             <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?= $shareUrl ?>" target="_blank" rel="noopener">LinkedIn</a>
         </div>
+
+        <?= render('site/partials/comments', compact('post', 'comments', 'commentCount', 'closedReason', 'myPending', 'commentErrors', 'commentOld')) ?>
 
         <?php if ($related): ?>
             <section class="block related">

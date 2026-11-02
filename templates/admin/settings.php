@@ -25,6 +25,24 @@
         <p class="muted small">Opcional. As mensagens do formulário sempre ficam salvas em “Mensagens”; o aviso por e-mail depende de o servidor conseguir enviar e-mails.</p>
     </fieldset>
     <fieldset>
+        <legend>Comentários</legend>
+        <label class="checkbox"><input type="checkbox" name="comments_enabled" value="1" <?= setting('comments_enabled', '1') === '1' ? 'checked' : '' ?>> Permitir comentários no site</label>
+        <label>Moderação
+            <select name="comments_moderation">
+                <?php foreach (COMMENT_MODERATION as $value => $label): ?>
+                    <option value="<?= $value ?>" <?= setting('comments_moderation', 'all') === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach ?>
+            </select>
+        </label>
+        <label>Fechar comentários depois de quantos dias da publicação
+            <input type="number" name="comments_close_days" min="0" max="3650" value="<?= e(setting('comments_close_days', '0')) ?>">
+        </label>
+        <p class="muted small">Use 0 para nunca fechar.</p>
+        <label>Palavras bloqueadas (uma por linha)
+            <textarea name="comments_blocklist" rows="4" placeholder="Comentários com estas palavras no nome, e-mail ou texto vão direto para o spam"><?= e(setting('comments_blocklist')) ?></textarea>
+        </label>
+    </fieldset>
+    <fieldset>
         <legend>Redes sociais</legend>
         <label>Instagram <input type="url" name="social_instagram" value="<?= e(setting('social_instagram')) ?>" placeholder="https://instagram.com/..."></label>
         <label>X (Twitter) <input type="url" name="social_x" value="<?= e(setting('social_x')) ?>" placeholder="https://x.com/..."></label>

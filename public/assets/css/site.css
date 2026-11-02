@@ -183,6 +183,31 @@ img { max-width: 100%; height: auto; display: block; }
 .alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
 .alert-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
 
+/* ----- Comentários ----- */
+.comments { margin: 8px 0 40px; scroll-margin-top: 16px; }
+.comment-list, .comment-replies { list-style: none; padding: 0; margin: 0; }
+.comment-list > li { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.comment-replies { margin: 14px 0 0 54px; padding-left: 16px; border-left: 2px solid var(--border); }
+.comment-replies > li + li { margin-top: 14px; }
+.comment { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; scroll-margin-top: 16px; }
+.comment:target .comment-main { background: var(--surface); border-radius: var(--radius); }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem; color: #fff; background: hsl(var(--hue), 45%, 45%);
+}
+.comment-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 4px; }
+.comment-head time { font-size: 0.8rem; color: var(--muted); }
+.staff-badge { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--accent); color: #fff; padding: 1px 6px; border-radius: 3px; }
+.comment-body { overflow-wrap: anywhere; line-height: 1.6; }
+.reply-link { display: inline-block; margin-top: 6px; font-size: 0.85rem; font-weight: 600; color: var(--accent); }
+.comment-pending { opacity: .75; }
+.pending-note { margin: 0 0 6px; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+.comment-form { margin-top: 28px; padding: 20px; background: var(--surface); border-radius: var(--radius); scroll-margin-top: 16px; }
+.comment-form h3 { margin: 0; font-family: var(--serif); font-size: 1.3rem; }
+.comment-form p { margin: 0; }
+.replying { font-size: 0.9rem; }
+.replying a { color: var(--accent); }
+
 /* ----- Rodapé ----- */
 .site-footer { border-top: 3px solid var(--text); background: var(--surface); padding: 32px 0; font-size: 0.9rem; color: var(--muted); }
 .footer-inner { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
@@ -210,4 +235,5 @@ img { max-width: 100%; height: auto; display: block; }
   .card-horizontal .card-excerpt { display: none; }
   .post-content { font-size: 1.1rem; }
   .contact-row { grid-template-columns: 1fr; }
+  .comment-replies { margin-left: 20px; }
 }
