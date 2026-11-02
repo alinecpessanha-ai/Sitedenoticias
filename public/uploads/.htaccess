@@ -1,0 +1,7 @@
+# Impede a execução de scripts na pasta de uploads (Apache)
+<FilesMatch "\.(php|phtml|php\d|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
