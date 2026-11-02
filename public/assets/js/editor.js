@@ -195,14 +195,14 @@
           btn.className = 'media-pick';
           btn.title = item.name;
           const img = document.createElement('img');
-          img.src = item.url;
+          img.src = item.thumb || item.url;
           img.alt = item.name;
           img.loading = 'lazy';
           btn.appendChild(img);
           btn.addEventListener('click', () => {
             mediaInput.value = item.id;
             if (fileInput) fileInput.value = '';
-            showPreview(item.url);
+            showPreview(item.thumb || item.url);
             dialog.close();
           });
           grid.appendChild(btn);

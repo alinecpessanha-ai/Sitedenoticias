@@ -12,7 +12,7 @@
         </header>
 
         <div class="post-content">
-            <?= $page['content'] /* HTML já sanitizado ao salvar */ ?>
+            <?= responsive_content($page['content']) /* HTML já sanitizado ao salvar */ ?>
         </div>
 
         <?php if ($page['template'] === 'contact'): ?>

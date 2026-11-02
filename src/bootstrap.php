@@ -22,12 +22,15 @@ session_set_cookie_params([
     'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
     'path'     => '/',
 ]);
-session_start();
+if (PHP_SAPI !== 'cli') { // scripts de terminal (bin/) não usam sessão
+    session_start();
+}
 
 require ROOT . '/src/helpers.php';
 require ROOT . '/src/database.php';
 require ROOT . '/src/auth.php';
 require ROOT . '/src/sanitizer.php';
+require ROOT . '/src/images.php';
 require ROOT . '/src/uploads.php';
 require ROOT . '/src/content.php';
 require ROOT . '/src/router.php';

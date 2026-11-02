@@ -76,7 +76,7 @@ $statusOptions = can('publish') ? POST_STATUSES : array_intersect_key(POST_STATU
             <h2>Imagem destacada</h2>
             <div class="featured-preview" data-featured-preview>
                 <?php if ($post['featured_image']): ?>
-                    <img src="<?= e(upload_url($post['featured_image'])) ?>" alt="">
+                    <img src="<?= e(image_url($post['featured_image'], 400)) ?>" alt="">
                 <?php endif ?>
             </div>
             <?php if ($post['featured_image']): ?>

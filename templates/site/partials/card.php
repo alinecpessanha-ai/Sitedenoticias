@@ -2,12 +2,15 @@
 /** @var array $post */
 $variant = $variant ?? 'vertical'; // vertical | horizontal | hero | compact
 $showExcerpt = $showExcerpt ?? in_array($variant, ['hero', 'horizontal'], true);
+$sizes = ['hero' => SIZES_HERO, 'horizontal' => SIZES_LIST][$variant] ?? SIZES_CARD;
+// A manchete aparece logo no topo: carrega imediatamente; as demais, só quando chegam perto da tela
+$loading = $variant === 'hero' ? 'fetchpriority="high"' : 'loading="lazy"';
 ?>
 <article class="card card-<?= e($variant) ?>">
     <?php if ($variant !== 'compact'): ?>
         <a class="card-media" href="<?= post_url($post) ?>" tabindex="-1" aria-hidden="true">
             <?php if ($post['featured_image']): ?>
-                <img src="<?= e(upload_url($post['featured_image'])) ?>" alt="" loading="lazy">
+                <img <?= image_attrs($post['featured_image'], $sizes) ?> alt="" <?= $loading ?>>
             <?php else: ?>
                 <span class="placeholder"><?= e(mb_substr($post['category_name'] ?? $post['title'], 0, 1)) ?></span>
             <?php endif ?>

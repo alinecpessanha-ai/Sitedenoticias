@@ -13,12 +13,14 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 - Páginas de categoria, tag e autor, busca, paginação e "Mais lidas"
 - RSS (`/feed.xml`), sitemap (`/sitemap.xml`), `robots.txt` e meta tags Open Graph
 - Layout responsivo com modo escuro automático
+- Imagens responsivas: cada tela recebe a versão mais leve que mantém a nitidez (`srcset`)
 
 **Painel administrativo (`/admin`)**
 - Instalação guiada no primeiro acesso
 - Editor visual (negrito, intertítulos, citações, listas, links, imagens e vídeos do YouTube/Vimeo, modo HTML)
 - Rascunho → revisão → publicação, com **agendamento** por data futura e marcação de destaque
 - Categorias (com ordem no menu), tags, biblioteca de mídia
+- **Miniaturas automáticas** (400, 800 e 1600 px) ao enviar imagens, com correção da rotação de fotos de celular
 - Páginas fixas com modelo "Padrão" ou "Contato" (com formulário)
 - Caixa de **Mensagens** do formulário de contato, com contador de não lidas e aviso opcional por e-mail
 - Usuários com papéis: **Administrador**, **Editor** e **Autor**
@@ -33,7 +35,8 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 
 ## Como rodar
 
-Requisitos: PHP 8.1+ com as extensões `pdo_sqlite`, `dom`, `mbstring` e `fileinfo` (vêm na maioria das instalações).
+Requisitos: PHP 8.1+ com as extensões `pdo_sqlite`, `dom`, `mbstring`, `fileinfo` e `gd` (vêm na maioria das instalações).
+A extensão `exif` é opcional: com ela, fotos de celular ficam na orientação correta nas miniaturas.
 
 ```bash
 php -S localhost:8000 -t public public/index.php
@@ -54,6 +57,7 @@ No Nginx, use `try_files $uri /index.php?$query_string;`.
 
 ```
 config.php              Configurações
+bin/miniaturas.php      Gera miniaturas de imagens antigas (terminal)
 public/                 Raiz pública (index.php, CSS, JS, uploads)
 src/
   bootstrap.php         Inicialização
@@ -62,6 +66,7 @@ src/
   auth.php              Login, papéis e permissões
   sanitizer.php         Limpeza do HTML das notícias
   uploads.php           Upload de imagens
+  images.php            Miniaturas e imagens responsivas
   content.php           Consultas de notícias, categorias e tags
   router.php            Roteador
   routes/site.php       Rotas do site público
@@ -70,6 +75,19 @@ src/
 templates/
   site/                 Tema do site
   admin/                Telas do painel
+```
+
+### Miniaturas
+
+Ao enviar uma imagem, o CMS cria versões de 400, 800 e 1600 px ao lado do original (`foto-800w.jpg` etc.).
+O site usa `srcset`, então o navegador baixa só o tamanho necessário — uma foto de celular de 1 MB
+chega ao leitor com 20–80 KB. GIFs não são redimensionados, para não perder a animação.
+
+Para imagens enviadas antes desse recurso, use o botão **Gerar miniaturas que faltam** em *Mídia*, ou:
+
+```bash
+php bin/miniaturas.php            # gera as que faltam
+php bin/miniaturas.php --refazer  # recria todas (ex.: depois de mudar os tamanhos em src/images.php)
 ```
 
 ### Banco de dados e atualizações
@@ -82,7 +100,6 @@ Para mudar o visual do site, edite `templates/site/` e `public/assets/css/site.c
 
 ## Próximos passos sugeridos
 
-- Redimensionamento automático de imagens (miniaturas)
 - Revisões/histórico de alterações das notícias
 - Comentários moderados e newsletter
 - Cache de páginas para alto tráfego

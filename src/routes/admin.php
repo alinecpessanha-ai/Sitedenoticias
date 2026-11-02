@@ -423,7 +423,8 @@ route('GET', '/admin/midia', function () {
     if (input('formato') === 'json') {
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(array_map(fn ($m) => [
-            'id' => (int) $m['id'], 'url' => upload_url($m['path']), 'name' => $m['original_name'],
+            'id' => (int) $m['id'], 'url' => upload_url($m['path']), 'thumb' => image_url($m['path'], 400),
+            'name' => $m['original_name'],
         ], $items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return;
     }
@@ -447,6 +448,16 @@ route('POST', '/admin/midia/enviar', function () {
     }
 
     flash($result['ok'] ? 'success' : 'error', $result['ok'] ? 'Imagem enviada.' : $result['error']);
+    redirect('/admin/midia');
+});
+
+route('POST', '/admin/midia/miniaturas', function () {
+    require_can('manage_all_media');
+    verify_csrf();
+    $stats = regenerate_all_variants();
+    flash('success', $stats['created']
+        ? "Miniaturas geradas para {$stats['created']} imagem(ns)."
+        : 'Todas as imagens já tinham miniaturas.');
     redirect('/admin/midia');
 });
 

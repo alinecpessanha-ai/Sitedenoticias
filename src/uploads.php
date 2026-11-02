@@ -44,8 +44,8 @@ function handle_image_upload(mixed $file): array
         return ['ok' => false, 'error' => 'Formato não suportado. Use JPG, PNG, GIF ou WEBP.'];
     }
 
-    $info = @getimagesize($file['tmp_name']);
-    if ($info === false) {
+    $info = image_dimensions($file['tmp_name']);
+    if ($info === null) {
         return ['ok' => false, 'error' => 'O arquivo não parece ser uma imagem válida.'];
     }
 
@@ -65,6 +65,10 @@ function handle_image_upload(mixed $file): array
     }
 
     $path = $subdir . '/' . $filename;
+
+    // Gera as miniaturas (400, 800 e 1600 px) usadas pelo site
+    generate_image_variants($path);
+
     $originalName = mb_substr(basename((string) ($file['name'] ?? 'imagem')), 0, 200);
     $user = current_user();
 
@@ -73,7 +77,8 @@ function handle_image_upload(mixed $file): array
         $path, $originalName, $mime, (int) $file['size'], $info[0], $info[1], $user['id'] ?? null, now(),
     ]);
 
-    return ['ok' => true, 'id' => last_id(), 'path' => $path, 'url' => upload_url($path)];
+    // 'url' é o original (vai para o texto; o srcset é acrescentado ao exibir); 'thumb' serve para listas
+    return ['ok' => true, 'id' => last_id(), 'path' => $path, 'url' => upload_url($path), 'thumb' => image_url($path, 400)];
 }
 
 function delete_media(array $media): void
@@ -83,6 +88,7 @@ function delete_media(array $media): void
     $uploads = realpath(ROOT . '/public/uploads');
     if ($real && $uploads && str_starts_with($real, $uploads . DIRECTORY_SEPARATOR)) {
         @unlink($real);
+        delete_image_variants($media['path']);
     }
     q('DELETE FROM media WHERE id = ?', [$media['id']]);
 }

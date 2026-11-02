@@ -32,13 +32,13 @@ $updated = $post['published_at'] && strtotime($post['updated_at']) - strtotime($
 
         <?php if ($post['featured_image']): ?>
             <figure class="featured">
-                <img src="<?= e(upload_url($post['featured_image'])) ?>" alt="<?= e($post['image_caption'] ?: $post['title']) ?>">
+                <img <?= image_attrs($post['featured_image'], SIZES_FULL) ?> fetchpriority="high" alt="<?= e($post['image_caption'] ?: $post['title']) ?>">
                 <?php if ($post['image_caption']): ?><figcaption><?= e($post['image_caption']) ?></figcaption><?php endif ?>
             </figure>
         <?php endif ?>
 
         <div class="post-content">
-            <?= $post['content'] /* HTML já sanitizado ao salvar */ ?>
+            <?= responsive_content($post['content']) /* HTML já sanitizado ao salvar */ ?>
         </div>
 
         <?php if ($tags): ?>
