@@ -165,6 +165,41 @@ legend { font-weight: 700; font-size: 1rem; margin-bottom: 12px; }
 .message-actions form { margin: 0; }
 .btn.danger { color: var(--danger); }
 
+/* ----- Histórico de alterações ----- */
+.history-mini { list-style: none; padding: 0; margin: 0 0 10px; }
+.history-mini li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.timeline { list-style: none; padding: 0 0 0 18px; margin: 0 0 16px; border-left: 2px solid var(--border); }
+.timeline li { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px; }
+.timeline li::before { content: ""; position: absolute; left: -26px; top: 18px; width: 12px; height: 12px; border-radius: 50%; background: var(--border); border: 2px solid var(--bg); }
+.timeline li.current::before { background: var(--primary); }
+.timeline-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.timeline-note { margin-top: 4px; font-style: italic; }
+.timeline-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-size: 0.9rem; }
+.timeline-actions form { margin: 0; }
+.compare-head { display: grid; gap: 8px; }
+.compare-head form { margin: 8px 0 0; }
+.compare-head p { margin: 0; }
+.legend { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 4px; margin-right: 6px; }
+.legend-del { background: #fee2e2; color: #991b1b; }
+.legend-ins { background: #dcfce7; color: #166534; }
+.diff-field h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+del { background: #fee2e2; color: #991b1b; text-decoration: line-through; text-decoration-color: rgba(153, 27, 27, .5); }
+ins { background: #dcfce7; color: #166534; text-decoration: none; }
+del + ins { margin-left: 3px; }
+.diff-text, .diff-short { margin: 0; font-size: 1.05rem; line-height: 1.6; }
+.diff-short del, .diff-short ins { padding: 2px 6px; border-radius: 4px; }
+.diff-content { font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.6; }
+.diff-content p { margin: 0 0 8px; padding: 6px 10px; border-left: 3px solid transparent; border-radius: 4px; }
+.diff-content .diff-same { color: var(--muted); }
+.diff-content .diff-changed { border-left-color: #f59e0b; background: #fffbeb; }
+.diff-content .diff-removed { border-left-color: #dc2626; background: #fef2f2; color: #991b1b; text-decoration: line-through; text-decoration-color: rgba(153, 27, 27, .4); }
+.diff-content .diff-added { border-left-color: #16a34a; background: #f0fdf4; color: #166534; }
+.diff-content .diff-skip { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 0.85rem; color: var(--muted); text-align: center; background: var(--bg); }
+.diff-images { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.diff-images figure { margin: 0; }
+.diff-image { max-width: 100%; max-height: 240px; border-radius: var(--radius); display: block; margin-top: 6px; }
+.page-head .muted { margin: 4px 0 0; }
+
 /* ----- Login / instalação ----- */
 .auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
 .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 32px; width: 100%; max-width: 420px; }
@@ -185,4 +220,5 @@ legend { font-weight: 700; font-size: 1rem; margin-bottom: 12px; }
   .new-post { display: none; }
   .admin-content, .admin-topbar { padding-left: 16px; padding-right: 16px; }
   .table { display: block; overflow-x: auto; }
+  .diff-images { grid-template-columns: 1fr; }
 }

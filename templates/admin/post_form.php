@@ -72,6 +72,21 @@ $statusOptions = can('publish') ? POST_STATUSES : array_intersect_key(POST_STATU
             </label>
         </section>
 
+        <?php if (!$isNew && ($history = post_revisions((int) $post['id'], 5))): ?>
+            <section class="panel">
+                <h2>Histórico</h2>
+                <ul class="history-mini">
+                    <?php foreach ($history as $i => $rev): ?>
+                        <li>
+                            <a href="<?= url('admin/noticias/' . $post['id'] . '/historico/' . $rev['id']) ?>"><?= e(short_date($rev['created_at'])) ?></a>
+                            <span class="muted small"><?= e($rev['user_name'] ?? 'Usuário excluído') ?><?= $i === 0 ? ' · atual' : '' ?></span>
+                        </li>
+                    <?php endforeach ?>
+                </ul>
+                <a href="<?= url('admin/noticias/' . $post['id'] . '/historico') ?>">Ver histórico completo →</a>
+            </section>
+        <?php endif ?>
+
         <section class="panel">
             <h2>Imagem destacada</h2>
             <div class="featured-preview" data-featured-preview>

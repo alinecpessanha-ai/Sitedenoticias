@@ -328,6 +328,7 @@ route('POST', '/admin/noticias/salvar', function () {
         $id = last_id();
     }
     sync_tags($id, input('tags'));
+    save_revision($id, (int) $user['id'], $existing ? '' : 'Notícia criada');
 
     $messages = [
         'draft'     => 'Rascunho salvo.',
@@ -774,4 +775,111 @@ route('POST', '/admin/mensagens/{id}/excluir', function (string $id) {
     q('DELETE FROM messages WHERE id = ?', [(int) $id]);
     flash('success', 'Mensagem excluída.');
     redirect('/admin/mensagens');
+});
+
+/* ======================================================================
+ * Histórico de alterações das notícias
+ * ==================================================================== */
+
+/** Carrega a notícia e confere se o usuário pode mexer nela. */
+function post_for_history(string $id): array
+{
+    require_login();
+    $post = q_one('SELECT * FROM posts WHERE id = ?', [(int) $id]);
+    if (!$post) {
+        not_found();
+    }
+    if (!can('edit_post', $post)) {
+        forbidden();
+    }
+    return $post;
+}
+
+function find_revision(array $post, string $revisionId): array
+{
+    $revision = q_one('SELECT r.*, u.name AS user_name FROM post_revisions r LEFT JOIN users u ON u.id = r.user_id
+                       WHERE r.id = ? AND r.post_id = ?', [(int) $revisionId, $post['id']]);
+    if (!$revision) {
+        not_found();
+    }
+    return $revision;
+}
+
+route('GET', '/admin/noticias/{id}/historico', function (string $id) {
+    $post = post_for_history($id);
+    $revisions = post_revisions((int) $post['id']);
+
+    // O que cada versão mudou em relação à anterior
+    foreach ($revisions as $i => $revision) {
+        $previous = $revisions[$i + 1] ?? null;
+        $revisions[$i]['changes'] = $previous
+            ? array_map(fn ($f) => REVISION_FIELDS[$f], revision_changes($previous, $revision))
+            : [];
+    }
+
+    view('admin/revisions', [
+        'title'     => 'Histórico: ' . $post['title'],
+        'post'      => $post,
+        'revisions' => $revisions,
+    ], ADMIN_LAYOUT);
+});
+
+route('GET', '/admin/noticias/{id}/historico/{rev}', function (string $id, string $rev) {
+    $post = post_for_history($id);
+    $revision = find_revision($post, $rev);
+    $latestId = (int) q_val('SELECT MAX(id) FROM post_revisions WHERE post_id = ?', [$post['id']]);
+
+    // Por padrão compara com a versão anterior; com ?com=atual, com o estado atual da notícia
+    $againstCurrent = input('com') === 'atual';
+    if ($againstCurrent) {
+        $old = $revision;
+        $new = post_snapshot((int) $post['id']);
+    } else {
+        $old = previous_revision($revision);
+        $new = $revision;
+    }
+
+    view('admin/revision', [
+        'title'          => 'Comparar versões',
+        'post'           => $post,
+        'revision'       => $revision,
+        'old'            => $old,
+        'new'            => $new,
+        'againstCurrent' => $againstCurrent,
+        'isLatest'       => (int) $revision['id'] === $latestId,
+        'changes'        => $old ? revision_changes($old, $new) : array_keys(REVISION_FIELDS),
+    ], ADMIN_LAYOUT);
+});
+
+route('POST', '/admin/noticias/{id}/historico/{rev}/restaurar', function (string $id, string $rev) {
+    $user = require_login();
+    $post = post_for_history($id);
+    verify_csrf();
+    $revision = find_revision($post, $rev);
+
+    // Restaura o conteúdo; status e data de publicação continuam como estão
+    // (restaurar um texto antigo não deve despublicar nem publicar a notícia)
+    $categoryId = $revision['category_id'] && q_val('SELECT id FROM categories WHERE id = ?', [$revision['category_id']])
+        ? (int) $revision['category_id'] : null;
+    $image = $revision['featured_image'] && is_file(upload_path($revision['featured_image']))
+        ? $revision['featured_image'] : null;
+
+    q('UPDATE posts SET title = ?, excerpt = ?, content = ?, featured_image = ?, image_caption = ?, category_id = ?, updated_at = ?
+       WHERE id = ?', [
+        $revision['title'], $revision['excerpt'], $revision['content'], $image, $revision['image_caption'], $categoryId, now(), $post['id'],
+    ]);
+    sync_tags((int) $post['id'], $revision['tags']);
+
+    $from = short_date($revision['created_at']) . ($revision['user_name'] ? ' (' . $revision['user_name'] . ')' : '');
+    save_revision((int) $post['id'], (int) $user['id'], 'Restaurada a versão de ' . $from);
+
+    $warnings = [];
+    if ($revision['featured_image'] && !$image) {
+        $warnings[] = 'a imagem destacada daquela versão foi excluída da biblioteca';
+    }
+    if ($revision['category_id'] && !$categoryId) {
+        $warnings[] = 'a categoria daquela versão foi excluída';
+    }
+    flash('success', 'Versão de ' . $from . ' restaurada.' . ($warnings ? ' Atenção: ' . implode(' e ', $warnings) . '.' : ''));
+    redirect('/admin/noticias/' . $post['id'] . '/editar');
 });

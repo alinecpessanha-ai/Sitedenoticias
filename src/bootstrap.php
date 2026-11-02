@@ -33,4 +33,5 @@ require ROOT . '/src/sanitizer.php';
 require ROOT . '/src/images.php';
 require ROOT . '/src/uploads.php';
 require ROOT . '/src/content.php';
+require ROOT . '/src/revisions.php';
 require ROOT . '/src/router.php';

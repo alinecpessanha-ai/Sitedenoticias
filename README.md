@@ -19,6 +19,7 @@ Feito em **PHP 8 puro + SQLite**, sem frameworks nem dependências: roda em prat
 - Instalação guiada no primeiro acesso
 - Editor visual (negrito, intertítulos, citações, listas, links, imagens e vídeos do YouTube/Vimeo, modo HTML)
 - Rascunho → revisão → publicação, com **agendamento** por data futura e marcação de destaque
+- **Histórico de alterações**: cada salvamento guarda uma versão; compare versões (palavra por palavra) e restaure qualquer uma
 - Categorias (com ordem no menu), tags, biblioteca de mídia
 - **Miniaturas automáticas** (400, 800 e 1600 px) ao enviar imagens, com correção da rotação de fotos de celular
 - Páginas fixas com modelo "Padrão" ou "Contato" (com formulário)
@@ -68,6 +69,7 @@ src/
   uploads.php           Upload de imagens
   images.php            Miniaturas e imagens responsivas
   content.php           Consultas de notícias, categorias e tags
+  revisions.php         Histórico de alterações e comparação de textos
   router.php            Roteador
   routes/site.php       Rotas do site público
   routes/admin.php      Rotas do painel
@@ -100,7 +102,6 @@ Para mudar o visual do site, edite `templates/site/` e `public/assets/css/site.c
 
 ## Próximos passos sugeridos
 
-- Revisões/histórico de alterações das notícias
 - Comentários moderados e newsletter
 - Cache de páginas para alto tráfego
 - Suporte a MySQL/PostgreSQL
