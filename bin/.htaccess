@@ -1,0 +1,2 @@
+# Pasta interna: nunca deve ser acessada pelo navegador
+Require all denied

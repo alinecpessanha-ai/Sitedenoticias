@@ -55,14 +55,21 @@ php bin/demo.php            # cria o conteúdo de demonstração
 php bin/demo.php --remover  # apaga só o que foi criado pela demonstração
 ```
 
-### Em produção (Apache/hospedagem compartilhada)
+### Em produção (hospedagem PHP: HostGator, Hostinger, Locaweb...)
 
-1. Envie os arquivos e aponte a raiz do domínio (document root) para a pasta `public/`.
-2. O `public/.htaccess` já redireciona as URLs para o `index.php` (precisa do `mod_rewrite`).
-3. Garanta permissão de escrita nas pastas `storage/` e `public/uploads/`.
-4. Em `config.php`, mude `debug` para `false` e preencha `site_url` (ex.: `https://meuportal.com.br`).
+```bash
+php bin/empacotar.php   # gera dist/sitedenoticias-AAAA-MM-DD-HHMMSS.zip, pronto para enviar
+```
 
-No Nginx, use `try_files $uri /index.php?$query_string;`.
+Envie o `.zip` para a `public_html` da hospedagem, extraia e acesse `/admin`.
+O passo a passo completo (com HTTPS, atualização e backup) está em **[INSTALACAO.md](INSTALACAO.md)**.
+
+O site funciona tanto com o domínio apontando para `public/` quanto com tudo dentro da `public_html`:
+o `.htaccess` da raiz encaminha as visitas para `public/` e bloqueia as pastas internas.
+Se faltar algo no servidor (versão do PHP, extensão, permissão), o site mostra uma página explicando como resolver.
+Em produção, os erros não aparecem para o visitante: ficam em `storage/erros.log`.
+
+No Nginx, aponte a raiz para `public/` e use `try_files $uri /index.php?$query_string;`.
 
 ## Estrutura
 
@@ -70,8 +77,11 @@ No Nginx, use `try_files $uri /index.php?$query_string;`.
 config.php              Configurações
 bin/miniaturas.php      Gera miniaturas de imagens antigas (terminal)
 bin/demo.php            Cria/remove conteúdo de demonstração (terminal)
+bin/empacotar.php       Gera o .zip para enviar à hospedagem (terminal)
+INSTALACAO.md           Passo a passo de publicação na hospedagem
 public/                 Raiz pública (index.php, CSS, JS, uploads)
 src/
+  requirements.php      Verificação de PHP, extensões e permissões
   bootstrap.php         Inicialização
   database.php          Conexão SQLite, migrações e configurações do site
   migrations/           Alterações do banco, numeradas (001_..., 002_...)

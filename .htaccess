@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# Usado quando o site é enviado inteiro para a pasta pública da hospedagem
+# (ex.: public_html), sem poder apontar o domínio para a pasta public/.
+# Se o domínio já aponta para public/, este arquivo simplesmente não é usado.
+# ---------------------------------------------------------------------------
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Para forçar HTTPS (depois de ativar o certificado SSL na hospedagem), tire o # das duas linhas:
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Bloqueia o acesso direto aos arquivos internos do sistema
+    RewriteRule ^(src|templates|storage|bin|dist|\.git)(/|$) - [F,L]
+    RewriteRule ^(config(\.local)?\.php|README\.md|INSTALACAO\.md|\.gitignore)$ - [F,L]
+
+    # Todo o resto é servido a partir da pasta public/
+    RewriteRule ^$ public/ [L]
+    RewriteRule ^((?!public/).*)$ public/$1 [L]
+</IfModule>
+
+# Proteção extra, caso o mod_rewrite esteja desligado
+<FilesMatch "^(config(\.local)?\.php|README\.md|INSTALACAO\.md)$">
+    Require all denied
+</FilesMatch>

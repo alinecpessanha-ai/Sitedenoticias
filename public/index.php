@@ -12,6 +12,10 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
+// Confere PHP, extensões e permissões antes de tudo (mostra como resolver, se faltar algo)
+require dirname(__DIR__) . '/src/requirements.php';
+cms_check_requirements(dirname(__DIR__));
+
 require dirname(__DIR__) . '/src/bootstrap.php';
 require ROOT . '/src/routes/site.php';
 require ROOT . '/src/routes/admin.php';

@@ -26,7 +26,7 @@ function absolute_url(string $path = '/'): string
     if (!empty($config['site_url'])) {
         return rtrim($config['site_url'], '/') . '/' . ltrim($path, '/');
     }
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $scheme = is_https() ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     return $scheme . '://' . $host . url($path);
 }
